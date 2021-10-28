@@ -6,7 +6,10 @@
 #define left -90
 #define right 90
 #define around 180
-
+#define REDLEDSTATE 1
+#define GREENLEDSTATE 2
+#define BLUELEDSTATE 3
+#define NOLEDSTATE 0
 
 
 
@@ -14,24 +17,84 @@ MeDCMotor motorleft(M1);
 MeDCMotor motorright(M2);
 MeLineFollower linesensor(PORT_1);  //D11, D12
 MeUltrasonicSensor rightsensor(PORT_2);  //D09, D10
-MeInfraredReceiver leftsensor(PORT_3);  //A2, A3
-MeColorSensor coloursensor(PORT_4);  //A0, A1    (A1 & A2 feed the 2 to 4 decoder, A0 & A3 receive inputs from the sensors respectively)
-
-
-pinMode.analogRead(A0);
-pinMode.analogRead(A3);
-pinMode.digitalWrite(A1);
-pinMode.digitalWrite(A2);
+//MeInfraredReceiver leftsensor(PORT_3);  //A2, A3
+//MeColorSensor coloursensor(PORT_4);  //A0, A1    (A1 & A2 feed the 2 to 4 decoder, A0 & A3 receive inputs from the sensors respectively)
 
 
 
-void setup()
-{
-  Serial.begin(9600);
-  leftsensor.begin();
+
+/**
+ * structures:
+ * 
+ * colourdecode
+ * turn
+ * irsensor
+ * untrasonic
+ * linesensor
+ * music
+ * 
+ * setup:
+ * pinmodes & everyting
+ * 
+ * loop:
+ * motorruns
+ * call irsensor
+ * call untrasonic
+ * call linesensor
+ * call colourdecode
+ * call turn or music
+ * end of loop
+ */
+
+
+
+
+
+
+
+
+
+
+int ledstate = NOLEDSTATE;
+
+void lightled() {
+  if (ledstate == REDLEDSTATE) {
+    digitalWrite(A1, HIGH);
+    digitalWrite(A2, LOW);
+    Serial.println(" R");
+    return;    
+  }
+  if (ledstate == BLUELEDSTATE) {
+    digitalWrite(A1, LOW);
+    digitalWrite(A2, HIGH);
+    Serial.println(" G");  
+    return;  
+  } 
+  if (ledstate == GREENLEDSTATE) {
+    digitalWrite(A1, HIGH);
+    digitalWrite(A2, HIGH);
+    Serial.println(" B");    
+    return;
+  }
+  digitalWrite(A1, LOW);
+  digitalWrite(A2, LOW);   
+ 
 }
 
 
+
+
+
+
+
+
+int colourdecode(int redval, int greenval, int blueval)
+{
+  if(redval <= ___rgbrange___)     //colour 1
+  {
+    return __degree__;
+  }
+}
 
 
 void turn(int degree)
@@ -52,34 +115,22 @@ void turn(int degree)
 
 
 
-
-
-
-void loop()
+int leftsensor()
 {
-  int rightdistance = ultraSensor.distanceCm();
-  int leftdistance = leftsensor.read();  
-  int linesensor = linesensor.readSensors();
-
   
+}
+
+
+
+int rightsensor()
+{
   
-  Serial.print("rightdistance : ");
-  Serial.print(rightdistance);
-  Serial.println(" cm");
-
-  
-  if(rightdistance < 8)
-  {
-    motorleft.run(-220);
-  }
-  else
-  {
-    motorleft.run(-240);
-  }
+}
 
 
-  
 
+int linesensor()
+{
   switch(linesensor)
   {
     case S1_IN_S2_IN: Serial.println("Sensor 1 and 2 are inside of black line");
@@ -100,5 +151,114 @@ void loop()
     break;
     default: break;
   }
+}
+
+
+void music()
+{
+  for(int i = 1; i <= 3; i += 1)
+  {
+    int freq = 600;
+    while(freq < 800)
+    {
+      freq += 1;
+    }
+    delay(20);
+    while(freq > 600)
+    {
+      freq -= 1;
+    }
+    delay(20);
+  }
+}
+
+
+
+
+
+
+void setup()
+{
+pinMode(A0, INPUT);  //colour
+pinMode(A3, INPUT);  //left
+pinMode(A1, OUTPUT); //2-4 x1
+pinMode(A2, OUTPUT); //2-4 x2
+  
+  Serial.begin(9600);
+//  leftsensor.begin();
+}
+
+
+
+
+
+
+
+
+
+
+
+void loop()
+{
+ /** int rightdistance = ultraSensor.distanceCm();
+  int leftdistance = leftsensor.read();  
+  int linesensor = linesensor.readSensors();
+
+  
+  
+  Serial.print("rightdistance : ");
+  Serial.print(rightdistance);
+  Serial.println(" cm");
+
+  
+  if(rightdistance < 8)
+  {
+    motorleft.run(-220);
+  }
+  else
+  {
+    motorleft.run(-240);
+  }
+
+*/
+  
+/**
+  
+   
  delay(100);
+
+*/
+
+
+//changed val to respective colour readings to feed into colour decoder
+
+int val = analogRead(A0);
+Serial.println(val);
+
+ delay(100);
+ledstate = REDLEDSTATE;
+lightled();
+ delay(50);
+int redval = analogRead(A0);
+Serial.println(val);
+
+ledstate = BLUELEDSTATE;
+lightled();
+ delay(50);
+int blueval = analogRead(A0);
+Serial.println(val);
+ ledstate = GREENLEDSTATE;
+lightled();
+ delay(50);
+int greenval = analogRead(A0);
+Serial.println(val);
+ ledstate = NOLEDSTATE;
+lightled();
+ delay(500); 
+
+turn(colourdecode(redval, greenval, blueval);
+
+
+
+ 
 }
