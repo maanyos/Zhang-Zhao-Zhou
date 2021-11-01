@@ -23,6 +23,12 @@ MeBuzzer buzzer
 
 
 
+  int rightdistance;
+  int newrightdistance;
+  int leftdistance = leftsensor.read();  
+  int linesensor = linesensor.readSensors();
+
+
 
 /**
  * structures:
@@ -130,27 +136,43 @@ int rightsensor()
 
 
 
-int linesensor()
+void steer(int n)
+{
+  if(n < 0)
+  {
+    motorleft.run(-240 - n);  //steer left
+    motorright.run(255);
+  }
+  else
+  {
+    motorleft.run(-240);
+    motorright.run(255 - n);  //steer right
+  }
+}
+
+
+
+
+bool linesensor()
 {
   switch(linesensor)
   {
-    case S1_IN_S2_IN: Serial.println("Sensor 1 and 2 are inside of black line");
-    motorleft.run(0);
-    motorright.run(0);
-    break;
-    case S1_IN_S2_OUT: Serial.println("Sensor 1 is inside of black line");
-    motorleft.run(0);
-    motorright.run(50);
-    break;
-    case S1_OUT_S2_IN: Serial.println("Sensor 2 is inside of black line");
-    motorleft.run(-50);
-    motorright.run(0);
-    break;
     case S1_OUT_S2_OUT: Serial.println("Sensor 1 and 2 are outside of black line");
     motorleft.run(-240);
     motorright.run(255);
-    break;
-    default: break;
+    return false;
+    case S1_IN_S2_OUT: Serial.println("Sensor 1 is inside of black line");
+    motorleft.run(0);
+    motorright.run(50);
+    return true;
+    case S1_OUT_S2_IN: Serial.println("Sensor 2 is inside of black line");
+    motorleft.run(-50);
+    motorright.run(0);
+    return true;
+    case S1_IN_S2_IN: Serial.println("Sensor 1 and 2 are inside of black line");
+    motorleft.run(0);
+    motorright.run(0);
+    return true;
   }
 }
 
@@ -183,13 +205,17 @@ void music()
 
 void setup()
 {
-pinMode(A0, INPUT);  //colour
-pinMode(A3, INPUT);  //left
-pinMode(A1, OUTPUT); //2-4 x1
-pinMode(A2, OUTPUT); //2-4 x2
+pinMode(COLOUR_IN, INPUT);  //colour
+pinMode(IR_IN, INPUT);  //left
+pinMode(24X1, OUTPUT); //2-4 x1
+pinMode(24X2, OUTPUT); //2-4 x2
   
   Serial.begin(9600);
-//  leftsensor.begin();
+  motorleft.run(-240);
+  motorright.run(255);
+  delay(300);
+  rightdistance = ultraSensor.distanceCm();
+  delay(10);
 }
 
 
@@ -203,33 +229,36 @@ pinMode(A2, OUTPUT); //2-4 x2
 
 
 void loop()
-{
- /** int rightdistance = ultraSensor.distanceCm();
-  int leftdistance = leftsensor.read();  
-  int linesensor = linesensor.readSensors();
-
-  
-  
-  Serial.print("rightdistance : ");
-  Serial.print(rightdistance);
-  Serial.println(" cm");
-
-  
-  if(rightdistance < 8)
+{ 
+  newrightdistance = ultraSensor.distanceCm();
+  steer(newrightdistance - rightdistance);
+  rightdistance = newrightdistance;
+  if(linesensor())
   {
-    motorleft.run(-220);
+    int angle = colourdecoder();
+  }
+  if(angle == -2)
+  {
+    turn(left);
+    straightonegrid();
+    turn(left);
+  }
+  else if(angle == 2)
+  {
+    turn(right);
+    straightonegrid();
+    turn(right);
   }
   else
   {
-    motorleft.run(-240);
+    turn(angle);
   }
-
-*/
   
-/**
   
-   
- delay(100);
+  
+  
+  
+  delay(100);
 
 */
 
