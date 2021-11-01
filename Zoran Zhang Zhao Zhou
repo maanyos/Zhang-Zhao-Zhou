@@ -10,6 +10,7 @@
 #define GREENLEDSTATE 2
 #define BLUELEDSTATE 3
 #define NOLEDSTATE 0
+#define oneduration 600
 
 
 
@@ -124,7 +125,7 @@ void turn(int degree)
 
 int leftsensor()
 {
-  
+  return ultrasonic.distancecm();
 }
 
 
@@ -136,7 +137,7 @@ int rightsensor()
 
 
 
-void steer(int n)
+void steer(int n)             //-ve n to steer left, +ve n to steer right
 {
   if(n < 0)
   {
@@ -152,6 +153,17 @@ void steer(int n)
 
 
 
+void onegridforward()
+{
+  motorleft.run(vleft);
+  motorright.run(vright);
+  delay(oneduration);
+  motorleft.stop();
+  motorleft.stop();
+  delay(100);
+}
+
+
 
 bool linesensor()
 {
@@ -164,10 +176,12 @@ bool linesensor()
     case S1_IN_S2_OUT: Serial.println("Sensor 1 is inside of black line");
     motorleft.run(0);
     motorright.run(50);
+    delay(20);
     return true;
     case S1_OUT_S2_IN: Serial.println("Sensor 2 is inside of black line");
     motorleft.run(-50);
     motorright.run(0);
+    delay(20);
     return true;
     case S1_IN_S2_IN: Serial.println("Sensor 1 and 2 are inside of black line");
     motorleft.run(0);
@@ -179,7 +193,7 @@ bool linesensor()
 
 void music()
 {
-  for(int i = 1; i <= 3; i += 1)
+  for(int i = 1; i <= 1; i += 1)
   {
     int freq = 600;
     while(freq < 800)
@@ -211,8 +225,8 @@ pinMode(24X1, OUTPUT); //2-4 x1
 pinMode(24X2, OUTPUT); //2-4 x2
   
   Serial.begin(9600);
-  motorleft.run(-240);
-  motorright.run(255);
+  motorleft.run(vleft);
+  motorright.run(vright);
   delay(300);
   rightdistance = ultraSensor.distanceCm();
   delay(10);
@@ -230,9 +244,23 @@ pinMode(24X2, OUTPUT); //2-4 x2
 
 void loop()
 { 
-  newrightdistance = ultraSensor.distanceCm();
-  steer(newrightdistance - rightdistance);
+  newrightdistance = rightsensor();
+  if(newrightdistance < 6)
+  {
+    steer(-80);
+    delay(100);
+  }
+  else if(newrightdistance > 10)
+  {
+    steer(80);
+    delay(100);
+  }
+  else
+  {
+    steer(newrightdistance - rightdistance);
+  }
   rightdistance = newrightdistance;
+  leftdistance = leftsensor();
   if(linesensor())
   {
     int angle = colourdecoder();
@@ -248,6 +276,10 @@ void loop()
     turn(right);
     straightonegrid();
     turn(right);
+  }
+  else if(angle == 0)
+  {
+    music();
   }
   else
   {
