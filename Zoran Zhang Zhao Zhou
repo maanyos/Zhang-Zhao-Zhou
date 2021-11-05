@@ -29,6 +29,13 @@
 
 
 
+
+
+float rightdistance;
+float newrightdistance;
+int leftdistance;
+
+
 struct Color_sensor 
 {
   int current[3];
@@ -120,41 +127,7 @@ MeDCMotor motorleft(M1);
 MeDCMotor motorright(M2);
 MeLineFollower linesensor(PORT_1);  //D11, D12
 MeUltrasonicSensor ultrasonic(PORT_2);  //D09, D10
-
 MeBuzzer buzzer;
-
-
-
-int rightdistance;
-int newrightdistance;
-int leftdistance;
-int newleftdistance;
-
-
-
-
-int ledstate = NOLEDSTATE;
-
-void lightled() {
-  if (ledstate == REDLEDSTATE) {
-    digitalWrite(A1, HIGH);
-    digitalWrite(A2, LOW);
-    return;    
-  }
-  if (ledstate == BLUELEDSTATE) {
-    digitalWrite(A1, LOW);
-    digitalWrite(A2, HIGH);
-    return;  
-  } 
-  if (ledstate == GREENLEDSTATE) {
-    digitalWrite(A1, HIGH);
-    digitalWrite(A2, HIGH);    
-    return;
-  }
-  digitalWrite(A1, LOW);
-  digitalWrite(A2, LOW);   
- 
-}
 
 
 int picktocolor (char pick){
@@ -184,6 +157,12 @@ int picktocolor (char pick){
 
 }
 
+void pause()
+{
+  motorleft.run(0);
+  motorright.run(0);
+  delay(300);
+}
 
 void turn(int degree)
 {
@@ -199,24 +178,12 @@ void turn(int degree)
     motorright.run(-255);
   }
   delay(TURNDURATION * degree);
-  motorleft.run(0);
-  motorright.run(0);
-  delay(50);
-  motorleft.run(vleft);
-  motorright.run(vright);
+  pause();
 }
 
 
 
-//uint16_t rightsensor()
-//{
-//  return ultrasonic.distanceCm();
-//}
-
-
-
-
-void steer(int n)             //-ve n to steer left, +ve n to steer right
+void steer(float n)             //-ve n to steer left, +ve n to steer right
 {
   if(n < 0)
   {
@@ -232,14 +199,20 @@ void steer(int n)             //-ve n to steer left, +ve n to steer right
 
 
 
+void runstraight()
+{
+  motorleft.run(vleft);
+  motorright.run(vright);
+}
+
+
+
 void onegridforward()
 {
   motorleft.run(vleft);
   motorright.run(vright);
   delay(oneduration);
-  motorleft.stop();
-  motorleft.stop();
-  delay(100);
+  pause();
 }
 
 
@@ -292,11 +265,7 @@ void music()
 }
 
 
-
-
-long time = 0;
-
-
+long times;
 
 void setup()
 {
@@ -312,12 +281,9 @@ pinMode(A2, OUTPUT); //2-4 x2
 //  rightdistance = (int) rightsensor.distanceCm();
   rightdistance = ultrasonic.distanceCm();
   leftdistance = analogRead(IR_IN);
-  delay(10);
+  delay(50);
+  times = millis();
 }
-
-
-
-
 
 
 
@@ -327,24 +293,38 @@ pinMode(A2, OUTPUT); //2-4 x2
 
 void loop()
 { 
+
   newrightdistance = ultrasonic.distanceCm();
   if(newrightdistance < 6)
   {
-    steer(-80);
+    steer(-30);
   }
   else if(newrightdistance < 10)
   {
-    steer(20 * (newrightdistance - rightdistance));
+    steer(15 * (newrightdistance - rightdistance));
+      Serial.println(15 * (newrightdistance - rightdistance));
+
   }
-  newleftdistance = analogRead(IR_IN);
-  Serial.println(newleftdistance);
-  Serial.println(newrightdistance);
-  if(newleftdistance < 420)
+  leftdistance = analogRead(IR_IN);
+  if(leftdistance < 420)
   {
-    steer(80);
+    steer(30);
   }
   rightdistance = newrightdistance;
-  leftdistance = newleftdistance;
+
+
+ /* long newtime = millis();
+  if(newtime - times > 5000)
+  {
+    pause();
+    turn(around);
+    pause();
+    times = newtime;
+    
+  }
+  */
+ delay(50);
+  /*
   if(line()&& millis() - time > 1000)
   {
     time = millis();
@@ -370,7 +350,10 @@ void loop()
     turn(angle);
   }
   }
-  
+ */ 
+
+
+ 
   
   
  
