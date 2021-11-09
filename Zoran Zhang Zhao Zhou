@@ -10,7 +10,7 @@
 #define GREENLEDSTATE 2
 #define BLUELEDSTATE 3
 #define NOLEDSTATE 0
-#define oneduration 600
+#define oneduration 570
 #define RED -90
 #define GREEN 90
 #define ORANGE 180
@@ -23,7 +23,7 @@
 #define NOLED 0
 #define IR_IN A3
 #define COLOR_IN A0
-#define DEFAULT_LED_ON_DURATION 100
+#define DEFAULT_LED_ON_DURATION 40
 #define vleft -240
 #define vright 255
 
@@ -41,11 +41,11 @@ struct Color_sensor
   int current[3];
   int referencecolor[6][3] = 
   { //RBG
-    {381, 521, 560}, //red
-    {522, 351, 402}, //blue
-    {361, 503, 505}, //orange
-    {515, 445, 407}, //green
-    {490, 409, 487}, //purple
+    {363, 490, 525}, //red
+    {490, 335, 386}, //blue
+    {340, 477, 475}, //orange
+    {462, 395, 370}, //green
+    {460, 372, 446}, //purple
     {351, 307, 325}  //white
   };
   
@@ -82,12 +82,10 @@ struct Color_sensor
     light_led(REDLED);
     current[0] = analogRead(COLOR_IN);
     Serial.print(current[0]);
-    delay(DEFAULT_LED_ON_DURATION);
     light_led(BLUELED);
     current[1] = analogRead(COLOR_IN);
-    delay(DEFAULT_LED_ON_DURATION);
+    Serial.print(current[1]);
     light_led(GREENLED);
-    delay(DEFAULT_LED_ON_DURATION);
     current[2] = analogRead(COLOR_IN);
     Serial.println(current[2]);
     light_led();
@@ -169,13 +167,13 @@ void turn(int degree)
   if(degree < 0)
   { 
     degree *= -1;
-    motorleft.run(255);
-    motorright.run(255);
+    motorleft.run(-1 * vleft);
+    motorright.run(vright);
   }
   else
   {
-    motorleft.run(-255);
-    motorright.run(-255);
+    motorleft.run(vleft);
+    motorright.run(-1 * vright);
   }
   delay(TURNDURATION * degree);
   pause();
@@ -187,13 +185,13 @@ void steer(float n)             //-ve n to steer left, +ve n to steer right
 {
   if(n < 0)
   {
-    motorleft.run(-240 - (n));  //steer left
-    motorright.run(255);
+    motorleft.run(vleft - (n));  //steer left
+    motorright.run(vright);
   }
   else
   {
-    motorleft.run(-240);
-    motorright.run(255 - (n));  //steer right
+    motorleft.run(vleft);
+    motorright.run(vright - (n));  //steer right
   }
 }
 
@@ -221,19 +219,15 @@ bool line()
 {
   switch(linesensor.readSensors())
   {
-    case S1_OUT_S2_OUT: 
-    motorleft.run(vleft);
-    motorright.run(vright);
+    case S1_OUT_S2_OUT:
     return false;
     case S1_IN_S2_OUT: 
     motorleft.run(0);
     motorright.run(0);
-    delay(20);
     return true;
     case S1_OUT_S2_IN: 
     motorleft.run(0);
     motorright.run(0);
-    delay(20);
     return true;
     case S1_IN_S2_IN: 
     motorleft.run(0);
@@ -275,18 +269,13 @@ pinMode(A1, OUTPUT); //2-4 x1
 pinMode(A2, OUTPUT); //2-4 x2
   
   Serial.begin(9600);
+    delay(300);
   motorleft.run(vleft);
   motorright.run(vright);
-  delay(300);
-//  rightdistance = (int) rightsensor.distanceCm();
   rightdistance = ultrasonic.distanceCm();
   leftdistance = analogRead(IR_IN);
   delay(50);
-  times = millis();
 }
-
-
-
 
 
 
@@ -295,62 +284,62 @@ void loop()
 { 
 
   newrightdistance = ultrasonic.distanceCm();
-  if(newrightdistance < 6)
+  if(newrightdistance < 4)
   {
-    steer(-30);
+    steer(-80);
   }
-  else if(newrightdistance < 10)
+  else if(newrightdistance < 14)
   {
     steer(15 * (newrightdistance - rightdistance));
-      Serial.println(15 * (newrightdistance - rightdistance));
-
   }
   leftdistance = analogRead(IR_IN);
-  if(leftdistance < 420)
+  Serial.println(leftdistance);
+  if(leftdistance < 360)
   {
-    steer(30);
+    steer(80);
   }
   rightdistance = newrightdistance;
-
-
- /* long newtime = millis();
-  if(newtime - times > 5000)
+  if(line())
   {
-    pause();
-    turn(around);
-    pause();
-    times = newtime;
-    
-  }
-  */
- delay(50);
-  /*
-  if(line()&& millis() - time > 1000)
-  {
-    time = millis();
     int angle = picktocolor(color_sensor.color_picker());
+    delay(150);
   if(angle == -2)
  {
     turn(left);
     onegridforward();
     turn(left);
+    runstraight();
   }
   else if(angle == 2)
   {
     turn(right);
     onegridforward();
     turn(right);
+    runstraight();
   }
- // else if(angle == 0)
-//  {
-//    music();
-//  }
+  else if(angle == 180)
+  {
+    if(rightdistance < 7)
+    {
+      turn(-180);
+    }
+    else
+    {
+      turn(180);
+    }
+    runstraight();
+  }
+  else if(angle == 0)
+  {
+    music();
+    delay(10000);
+  }
   else
   {
     turn(angle);
+    runstraight();
   }
   }
- */ 
 
 
  
