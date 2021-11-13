@@ -2,7 +2,7 @@
 #include <SoftwareSerial.h>
 
 
-#define TURNDURATION 2.92
+#define TURNDURATION 2.95
 #define left -90
 #define right 90
 #define around 180
@@ -10,7 +10,7 @@
 #define GREENLEDSTATE 2
 #define BLUELEDSTATE 3
 #define NOLEDSTATE 0
-#define oneduration 570
+#define oneduration 560
 #define RED -90
 #define GREEN 90
 #define ORANGE 180
@@ -41,12 +41,12 @@ struct Color_sensor
   int current[3];
   int referencecolor[6][3] = 
   { //RBG
-    {363, 490, 525}, //red
-    {490, 335, 386}, //blue
-    {340, 477, 475}, //orange
-    {462, 395, 370}, //green
-    {460, 372, 446}, //purple
-    {351, 307, 325}  //white
+    {360, 435, 480}, //red
+    {472, 305, 358}, //blue
+    {350, 437, 455}, //orange
+    {477, 380, 362}, //green
+    {450, 351, 428}, //purple
+    {335, 275, 300}  //white
   };
   
   void light_led (char color = NOLED) 
@@ -82,10 +82,13 @@ struct Color_sensor
     light_led(REDLED);
     current[0] = analogRead(COLOR_IN);
     Serial.print(current[0]);
+//    delay(DEFAULT_LED_ON_DURATION);
     light_led(BLUELED);
     current[1] = analogRead(COLOR_IN);
     Serial.print(current[1]);
+//    delay(DEFAULT_LED_ON_DURATION);
     light_led(GREENLED);
+//    delay(DEFAULT_LED_ON_DURATION);
     current[2] = analogRead(COLOR_IN);
     Serial.println(current[2]);
     light_led();
@@ -169,13 +172,15 @@ void turn(int degree)
     degree *= -1;
     motorleft.run(-1 * vleft);
     motorright.run(vright);
+    delay(1.05 * TURNDURATION * degree);
   }
   else
   {
+    
     motorleft.run(vleft);
     motorright.run(-1 * vright);
+    delay(1.1 * TURNDURATION * degree);
   }
-  delay(TURNDURATION * degree);
   pause();
 }
 
@@ -283,26 +288,32 @@ pinMode(A2, OUTPUT); //2-4 x2
 void loop()
 { 
 
+
+
   newrightdistance = ultrasonic.distanceCm();
-  if(newrightdistance < 4)
+  if(newrightdistance < 5)
   {
-    steer(-80);
+    steer(-100);
   }
   else if(newrightdistance < 14)
   {
-    steer(15 * (newrightdistance - rightdistance));
+    float delta1 = 500 * (newrightdistance - rightdistance);
+    if ((delta1 > -100) && (delta1 < 100)) {
+      steer(delta1);
+    }
   }
   leftdistance = analogRead(IR_IN);
   Serial.println(leftdistance);
-  if(leftdistance < 360)
+  if(leftdistance < 400)
   {
-    steer(80);
+    steer(100);
   }
   rightdistance = newrightdistance;
   if(line())
   {
+    pause();
     int angle = picktocolor(color_sensor.color_picker());
-    delay(150);
+    delay(DEFAULT_LED_ON_DURATION);
   if(angle == -2)
  {
     turn(left);
@@ -322,17 +333,17 @@ void loop()
     if(rightdistance < 7)
     {
       turn(-180);
+      runstraight();
     }
     else
     {
-      turn(180);
+      turn(175);
+      runstraight();
     }
-    runstraight();
   }
   else if(angle == 0)
   {
     music();
-    delay(10000);
   }
   else
   {
@@ -342,7 +353,6 @@ void loop()
   }
 
 
- 
   
   
  
